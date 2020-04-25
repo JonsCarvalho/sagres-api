@@ -7,36 +7,39 @@ import requests
 
 app = Flask(__name__)
 
-@app.route('/login', methods=['GET'])
+@app.route('/login/', methods=['GET'])
 def sagres_login():
+    
+    if request.content_length == None or request.content_length == 0:
+        return "É necessário uma requisição com usuário e senha, consulte a documentação da API."
+    else:
+        username = request.json['username']
+        password = request.json['password']
 
-    username = request.json['username']
-    password = request.json['password']
+        data = {}
 
-    data = {}
+        with requests.session() as s:
+            url = "https://www.prograd.uesc.br/PortalSagres/Acesso.aspx"
+            r = s.get(url)
+            soup = BeautifulSoup(r.content, 'html.parser')
+            
+            
+            viewState = soup.find('input', attrs={'name': '__VIEWSTATE'})['value']
+            viewStateGenerator = soup.find('input', attrs={'name': '__VIEWSTATEGENERATOR'})['value']
+            eventValidation = soup.find('input', attrs={'name': '__EVENTVALIDATION'})['value']
+            
 
-    with requests.session() as s:
-        url = "https://www.prograd.uesc.br/PortalSagres/Acesso.aspx"
-        r = s.get(url)
-        soup = BeautifulSoup(r.content, 'html.parser')
-        
-        
-        viewState = soup.find('input', attrs={'name': '__VIEWSTATE'})['value']
-        viewStateGenerator = soup.find('input', attrs={'name': '__VIEWSTATEGENERATOR'})['value']
-        eventValidation = soup.find('input', attrs={'name': '__EVENTVALIDATION'})['value']
-        
-
-        data['__EVENTTARGET'] = ""
-        data['__EVENTARGUMENT'] = ""
-        data['__VIEWSTATE'] = viewState
-        data['__VIEWSTATEGENERATOR'] = viewStateGenerator
-        data['__EVENTVALIDATION'] = eventValidation
-        data["ctl00$PageContent$LoginPanel$UserName"] = username
-        data["ctl00$PageContent$LoginPanel$Password"] = password
-        data["ctl00$PageContent$LoginPanel$LoginButton"] = "Entrar"
-        r = s.post(url, data=data)
-        
-        return r.content
+            data['__EVENTTARGET'] = ""
+            data['__EVENTARGUMENT'] = ""
+            data['__VIEWSTATE'] = viewState
+            data['__VIEWSTATEGENERATOR'] = viewStateGenerator
+            data['__EVENTVALIDATION'] = eventValidation
+            data["ctl00$PageContent$LoginPanel$UserName"] = username
+            data["ctl00$PageContent$LoginPanel$Password"] = password
+            data["ctl00$PageContent$LoginPanel$LoginButton"] = "Entrar"
+            r = s.post(url, data=data)
+            
+            return r.content
 
 # A welcome message to test our server
 @app.route('/')
