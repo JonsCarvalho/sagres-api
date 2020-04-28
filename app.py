@@ -4,83 +4,49 @@ import os
 from flask import Flask, request, jsonify
 from bs4 import BeautifulSoup
 import requests
-import html as parser
+import login
+import timetable
+import subjects
 
 app = Flask(__name__)
 
-def sagres_login(username, password):
-    data = {}
-    with requests.session() as s:
-        
-        url = "https://www.prograd.uesc.br/PortalSagres/Acesso.aspx"
-        page = s.get(url)
-        soup = BeautifulSoup(page.content, 'html.parser')
-        
-        viewState = soup.find('input', attrs={'name': '__VIEWSTATE'})['value']
-        viewStateGenerator = soup.find('input', attrs={'name': '__VIEWSTATEGENERATOR'})['value']
-        eventValidation = soup.find('input', attrs={'name': '__EVENTVALIDATION'})['value']
-
-        data['__EVENTTARGET'] = ""
-        data['__EVENTARGUMENT'] = ""
-        data['__VIEWSTATE'] = viewState
-        data['__VIEWSTATEGENERATOR'] = viewStateGenerator
-        data['__EVENTVALIDATION'] = eventValidation
-        data["ctl00$PageContent$LoginPanel$UserName"] = username
-        data["ctl00$PageContent$LoginPanel$Password"] = password
-        data["ctl00$PageContent$LoginPanel$LoginButton"] = "Entrar"
-        page = s.post(url, data=data)
-
-        return page
-
-@app.route('/subjects/', methods=['POST', 'GET'])
-def sagres_subjects():
+@app.route('/subjects/', methods=['POST'])
+def route_subjects():
     
     if request.content_length == None or request.content_length == 0:
         return "É necessário uma requisição com usuário e senha, consulte a documentação da API."
     else:
-        page = sagres_login(request.json['username'], request.json['password'])
+        page = login.sagres_login(request.json['username'], request.json['password'])
+
+        return jsonify(subjects.sagres_subjects(page))
+
+@app.route('/timetable/', methods=['POST'])
+def route_timetable():
+
+    if request.content_length == None or request.content_length == 0:
+        return "É necessário uma requisição com usuário e senha, consulte a documentação da API."
+    else:
+        page = login.sagres_login(request.json['username'], request.json['password'])
         
-        content_sagres = BeautifulSoup(page.content, 'html.parser')
-  
-        table = content_sagres.find(class_='meus-horarios-legenda') 
+        return jsonify(timetable.sagres_timetable(page))
 
-        subjects_list =table.findAll('tr')
+@app.route('/all/', methods=['POST'])
+def route_all():
+    
+    if request.content_length == None or request.content_length == 0:
+        return "É necessário uma requisição com usuário e senha, consulte a documentação da API."
+    else:
+        page = login.sagres_login(request.json['username'], request.json['password'])
         
-        subjects=[]
+        all_json = []
+        instance = {}
 
-        for index in range (len(subjects_list)): 
-            if "".join(subjects_list[index].text.split()) != "" and (":" in subjects_list[index].text) == False:
-                instance = {} 
-                
-                instance['id'] = subjects_list[index].text.replace('\n', '').split(' - ')[0]
-                instance['subject'] = subjects_list[index].text.replace('\n', '').split(' - ')[1]
-                index += 1
-                if ":" in subjects_list[index].text:
-                    if "T0" in subjects_list[index].text:
-                        instance['class-theoretical'] = "".join(subjects_list[index].text.replace('\n', '').split(' :: ')[0].split())
-                        instance['class-theoretical-location'] = subjects_list[index].text.replace('\n', '').split(' :: ')[1]
-                    else:
-                        instance['class-practice'] = "".join(subjects_list[index].text.replace('\n', '').split(' :: ')[0].split())
-                        instance['class-practice-location'] = subjects_list[index].text.replace('\n', '').split(' :: ')[1]
-                if ":" in subjects_list[index+1].text:
-                    index += 1
-                    if "T0" in subjects_list[index].text:
-                        instance['class-theoretical'] = "".join(subjects_list[index].text.replace('\n', '').split(' :: ')[0].split())
-                        instance['class-theoretical-location'] = subjects_list[index].text.replace('\n', '').split(' :: ')[1]
-                    else:
-                        instance['class-practice'] = "".join(subjects_list[index].text.replace('\n', '').split(' :: ')[0].split())
-                        instance['class-practice-location'] = subjects_list[index].text.replace('\n', '').split(' :: ')[1]
-                else:
-                    if "T0" in subjects_list[index].text:
-                        instance['class-practice'] = ""
-                        instance['class-practice-location'] = ""
-                    else:
-                        instance['class-theoretical'] = ""
-                        instance['class-theoretical-location'] = ""
-                        
-                subjects.append(instance) 
+        instance['timetable'] = timetable.sagres_timetable(page)
+        instance['subjects'] = subjects.sagres_subjects(page)
 
-        return jsonify(subjects)
+        all_json.append(instance)
+        
+        return jsonify(all_json)
 
 @app.route('/')
 def index():
