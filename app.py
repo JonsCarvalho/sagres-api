@@ -31,7 +31,7 @@ def sagres_login(username, password):
 
         return page
 
-@app.route('/subjects/', methods=['GET'])
+@app.route('/subjects/', methods=['POST', 'GET'])
 def sagres_subjects():
     
     if request.content_length == None or request.content_length == 0:
@@ -69,6 +69,14 @@ def sagres_subjects():
                     else:
                         instance['class-practice'] = "".join(subjects_list[index].text.replace('\n', '').split(' :: ')[0].split())
                         instance['class-practice-location'] = subjects_list[index].text.replace('\n', '').split(' :: ')[1]
+                else:
+                    if "T0" in subjects_list[index].text:
+                        instance['class-practice'] = ""
+                        instance['class-practice-location'] = ""
+                    else:
+                        instance['class-theoretical'] = ""
+                        instance['class-theoretical-location'] = ""
+                        
                 subjects.append(instance) 
 
         return jsonify(subjects)
