@@ -11,6 +11,7 @@ app = Flask(__name__)
 def sagres_login(username, password):
     data = {}
     with requests.session() as s:
+        
         url = "https://www.prograd.uesc.br/PortalSagres/Acesso.aspx"
         page = s.get(url)
         soup = BeautifulSoup(page.content, 'html.parser')
