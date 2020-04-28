@@ -10,7 +10,7 @@ def sagres_timetable(page):
     
     timetable=[]
 
-    days=['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM']
+    days=['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom']
 
     for index in range (len(timetable_list)): 
         instance = {}
