@@ -95,7 +95,6 @@ ipython_config.py
 Pipfile.lock
 Pipfile
 
-
 #heroku start
 Procfile
 requirements.txt
