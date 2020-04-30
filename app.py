@@ -7,6 +7,7 @@ import requests
 import login
 import timetable
 import subjects
+import validation
 
 app = Flask(__name__)
 
@@ -47,6 +48,16 @@ def route_all():
         all_json.append(instance)
         
         return jsonify(all_json)
+
+@app.route('/validation/', methods=['POST'])
+def route_validation():
+    
+    if request.content_length == None or request.content_length == 0:
+        return "É necessário uma requisição com usuário e senha, consulte a documentação da API."
+    else:
+        page = login.sagres_login(request.json['username'], request.json['password'])
+
+        return jsonify(validation.sagres_validation(page))
 
 @app.route('/')
 def index():
