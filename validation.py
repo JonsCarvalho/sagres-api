@@ -7,9 +7,9 @@ def sagres_validation(page):
 
     validation=[]
     instance = {}
-    if "A sua tentativa de acesso não foi bem-sucedida." in content_sagres.text:
+    if("A sua tentativa de acesso não foi bem-sucedida." in content_sagres.text or page.url == "https://www.prograd.uesc.br/PortalSagres/Acesso.aspx"):
         instance['status'] = 'erro'
-    else:
+    if(page.url == "https://www.prograd.uesc.br/PortalSagres/Modules/Portal/Default.aspx"):
         instance['status'] = 'sucess'
         
     validation.append(instance)

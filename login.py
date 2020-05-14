@@ -28,7 +28,7 @@ def sagres_login(username, password):
         page = s.post(url, data=data)
 
         data_aux = {}
-        if(page.url != url_default):
+        if(page.url != url_default and page.url != url):
             soup2 = BeautifulSoup(page.content, 'html.parser')
 
             aspForm = soup2.find(
